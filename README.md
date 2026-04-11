@@ -1,46 +1,90 @@
-# 🏋️ Machine Learning Fitness Tracker
+🏋️ Machine Learning Fitness Tracker
 
-A machine learning-based fitness tracking system that analyzes user activity data to improve workout efficiency and provide actionable performance insights.
+A machine learning-based fitness tracking system that transforms raw MetaMotion sensor data into structured insights for exercise classification and performance analysis.
 
----
+🚀 Project Overview
 
-## 🚀 Project Overview
+Machine Learning Fitness Tracker is a data-driven application that processes wearable sensor data (accelerometer and gyroscope) to classify exercises and analyze workout patterns.
 
-Machine Learning Fitness Tracker is a data-driven application designed to track, analyze, and optimize user fitness performance. By leveraging machine learning techniques, the system transforms raw activity data into meaningful insights that help users improve training effectiveness and consistency.
+The system focuses on building a complete pipeline — from raw data ingestion to preprocessing, feature engineering, and preparation for machine learning modeling.
 
----
+💡 Business Purpose
 
-## 💡 Business Purpose
+Most fitness tracking systems simply record raw activity data without meaningful interpretation. This project addresses that gap by converting motion sensor data into structured, actionable insights that can support:
 
-Many fitness apps only record data (steps, calories, workouts) without providing meaningful analysis. This project focuses on turning raw fitness data into insights that help users:
+Exercise recognition
+Repetition tracking
+Performance analysis
+Data-driven fitness decisions
+⚙️ Tech Stack
+Layer	Technology
+Language	Python
+Data Processing	Pandas, NumPy
+Machine Learning	Scikit-learn
+Visualization	Matplotlib, Seaborn
+Data Source	MetaMotion Sensor Data
+🧠 Architecture Overview
+Raw Sensor Data (Accelerometer + Gyroscope)
+                ↓
+Data Cleaning & Preprocessing
+                ↓
+Feature Engineering (Labeling, Metadata Extraction)
+                ↓
+Resampling & Signal Normalization
+                ↓
+Structured Time-Series Dataset
+                ↓
+Machine Learning Model (Classification / Prediction)
+                ↓
+Insights & Performance Analysis
+📊 Data Pipeline & Processing
 
-- Understand performance trends  
-- Improve workout efficiency  
-- Make data-driven fitness decisions  
+This project processes raw MetaMotion sensor data collected from multiple participants performing different exercises.
 
----
+Data Characteristics
+📡 Accelerometer sampling rate: 12.5 Hz
+📡 Gyroscope sampling rate: 25 Hz
+📁 Multiple CSV files per exercise and participant
+🏷️ Labels extracted directly from filenames (exercise type, category, participant)
+Data Processing Steps
+Merged accelerometer and gyroscope datasets into a unified structure
+Converted timestamps from epoch milliseconds into datetime format
+Removed redundant columns (time, elapsed, raw epoch values)
+Added structured metadata:
+participant
+exercise label
+category
+set number
+Resampled data to 200 ms intervals (5 Hz)
+Aggregated signals using mean values to reduce noise
 
-## ⚙️ Tech Stack
+👉 Result:
+Raw multi-frequency sensor data (12.5–25 Hz) → Clean, consistent 5 Hz time-series dataset
 
-| Layer | Technology |
-|------|------------|
-| Language | Python |
-| ML Libraries | Scikit-learn / Pandas / NumPy |
-| Visualization | Matplotlib / Seaborn |
-| Data Processing | Pandas |
-| Model | Machine Learning Classification / Prediction |
+🔄 Transformation
 
----
+BEFORE
+Raw sensor data existed as separate CSV files with inconsistent sampling rates and no structured labeling, making it difficult to analyze or use for machine learning.
 
-## 🧠 Architecture Overview
+AFTER
+Built a preprocessing pipeline that merges, cleans, labels, and resamples multi-frequency sensor data into a unified 5 Hz time-series dataset ready for machine learning modeling.
 
-```text
-User Activity Data
-        ↓
-Data Preprocessing (Cleaning, Feature Engineering)
-        ↓
-Machine Learning Model (Training & Prediction)
-        ↓
-Performance Analysis & Insights
-        ↓
-User Feedback / Recommendations
+📈 Impact
+Built an end-to-end data processing pipeline for multi-source sensor data
+Reduced data inconsistency by standardizing sampling rates from 12.5–25 Hz → 5 Hz
+Improved signal stability through aggregation and resampling
+Automated feature extraction from filenames (participant, exercise type, category)
+Enabled downstream machine learning tasks such as exercise classification and repetition detection
+🔥 Key Features
+📊 Time-series sensor data processing
+🔄 Multi-source data merging (accelerometer + gyroscope)
+🧠 Feature engineering from raw data and metadata
+⚡ Frequency normalization and noise reduction
+📈 Data visualization and analysis
+🤖 Machine learning-ready dataset generation
+📌 Future Improvements
+Train and evaluate classification models (accuracy, precision, recall)
+Add real-time fitness tracking support
+Build a dashboard for visualization and insights
+Implement repetition counting using signal peaks
+Integrate wearable devices for live data streaming
