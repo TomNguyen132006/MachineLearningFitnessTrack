@@ -1,75 +1,46 @@
-# 🏋️ Machine Learning Fitness Tracker
+# Machine Learning Fitness Tracker
 
-A machine learning fitness tracking system that converts raw MetaMotion sensor data into structured insights for exercise classification and performance analysis.
+A machine learning pipeline that processes MetaMotion accelerometer and gyroscope data to classify barbell exercises from real workout sessions.
 
----
+## Overview
 
-## 🚀 Project Overview
+This project converts raw wearable sensor data into a clean, structured dataset for machine learning. The pipeline includes data preprocessing, time-series resampling, visualization, outlier detection, feature engineering, and exercise classification.
 
-This project builds a complete data pipeline to process wearable sensor data (accelerometer and gyroscope) and prepare it for machine learning.
+The goal of this project is to explore how motion sensor data can be used to recognize workout movement patterns and support data-driven fitness tracking.
 
-It focuses on transforming raw signals into clean, structured data that can be used to analyze workout patterns and classify exercises.
+## Features
 
----
+- Processes raw accelerometer and gyroscope CSV files from MetaMotion sensors
+- Extracts participant, exercise label, category, and set information from file names
+- Converts multi-frequency sensor data into a consistent 5Hz time-series dataset
+- Visualizes accelerometer and gyroscope movement patterns across exercises and participants
+- Applies outlier detection using IQR, Chauvenet’s criterion, and Local Outlier Factor
+- Builds sensor features using low-pass filtering, PCA, temporal abstraction, frequency analysis, and clustering
+- Trains and compares multiple classification models for exercise recognition
 
-## 💡 Purpose
+## Tech Stack
 
-Most fitness apps only record data without meaningful analysis.
-
-This project turns raw motion data into useful insights to support:
-- Exercise recognition
-- Repetition tracking
-- Performance analysis
-- Data-driven fitness decisions
-
----
-
-## 📊 Results
-
-- Successfully transformed raw MetaMotion sensor data into a structured time-series dataset ready for machine learning  
-- Standardized multi-frequency sensor streams (**12.5 Hz and 25 Hz**) into a consistent **5 Hz dataset**, improving data consistency and usability  
-- Reduced noise and variability in sensor signals through resampling and aggregation (mean filtering)  
-- Automated extraction of key features such as participant, exercise type, and category from raw file data  
-- Built a scalable preprocessing pipeline that supports downstream tasks like exercise classification and repetition detection  
-
----
-
-## 🚀 Key Outcomes
-
-- 📡 Converted unstructured sensor data → clean ML-ready dataset  
-- ⚡ Unified inconsistent data streams → stable time-series signals  
-- 🧠 Enabled machine learning workflow → classification & pattern detection  
-- 🔄 Reduced manual data preparation → automated pipeline  
-
----
-
-## 🔥 Highlighted Result (Portfolio Style)
-
-> Improved data reliability and consistency by converting multi-source sensor data (12.5–25 Hz) into a unified 5 Hz time-series dataset, enabling efficient machine learning analysis and feature extraction.
-
-## ⚙️ Tech Stack
-
-| Layer | Technology |
-|------|------------|
+| Area | Tools |
+|---|---|
 | Language | Python |
 | Data Processing | Pandas, NumPy |
-| Machine Learning | Scikit-learn |
 | Visualization | Matplotlib, Seaborn |
-| Data Source | MetaMotion Sensors |
+| Machine Learning | Scikit-learn |
+| Scientific Computing | SciPy |
+| Sensor Data | MetaMotion Accelerometer and Gyroscope |
 
----
-
-## 🧠 Architecture
+## Project Structure
 
 ```text
-Raw Sensor Data
-      ↓
-Cleaning & Preprocessing
-      ↓
-Feature Engineering
-      ↓
-Resampling (5 Hz)
-      ↓
-ML-Ready Dataset
-      ↓
-Modeling & Insights
+MachineLearningFitnessTrack/
+├── src/
+│   ├── data/
+│   │   └── make_dataset.py
+│   ├── features/
+│   │   ├── remove_outliers.py
+│   │   └── build_features.py
+│   ├── models/
+│   │   └── train_model.py
+│   └── visualization/
+│       └── visualize.py
+└── README.md
