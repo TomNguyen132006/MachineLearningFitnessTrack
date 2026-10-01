@@ -3,9 +3,13 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from LearningAlgorithms import ClassificationAlgorithms
-#import seaborn as sns   
+import seaborn as sns
 import itertools
 from sklearn.metrics import accuracy_score, confusion_matrix
+from pathlib import Path
+
+# Resolve data paths relative to the repo root so the script runs from any directory
+ROOT = Path(__file__).resolve().parents[2]
 
 
 # Plot settings
@@ -14,7 +18,7 @@ plt.rcParams["figure.figsize"] = (20, 5)
 plt.rcParams["figure.dpi"] = 100
 plt.rcParams["lines.linewidth"] = 2 
 
-df = pd.read_pickle("../../data/interim/03_data_features.pkl")
+df = pd.read_pickle(ROOT / "data/interim/03_data_features.pkl")
 # --------------------------------------------------------------
 # Create a training and test set
 # --------------------------------------------------------------
@@ -72,18 +76,7 @@ selected_features, ordered_features, ordered_scores = learner.forward_selection(
     max_features,X_train,y_train
 )
 
-selected_features= [
-    "acc_z_freq_0.0_Hz_ws_14",
-    "acc_x_freq_0.0_Hz_ws_14",
-    "gyr_r_pse",
-    "acc_y_freq_0.0_Hz_ws_14",
-    "gyr_z_freq_0.714_Hz_ws_14",
-    "gyr_r_freq_1.071_Hz_ws_14",
-    "gyr_z_freq_0.357_Hz_ws_14",
-    "gyr_x_freq_1.071_Hz_ws_14",
-    "acc_x_max_freq",
-    "gyr_z_max_freq",
-]
+print("Selected features:", selected_features)
 
 plt.figure(figsize=(10,5))
 plt.plot(np.arange(1,max_features + 1, 1), ordered_scores)
@@ -216,7 +209,7 @@ for i, f in zip(range(len(possible_feature_sets)), feature_names):
 # Create a grouped bar plot to compare the results
 # --------------------------------------------------------------
 
-score_df.sort_values (by="accuracy", ascending=False)
+print(score_df.sort_values(by="accuracy", ascending=False))
 plt.figure(figsize=(10, 10))
 sns.barplot(x="model", y="accuracy", hue="feature_set", data=score_df)
 plt.xlabel("Model")
@@ -238,6 +231,7 @@ plt.show()
 )
 
 accuracy = accuracy_score(y_test,class_test_y)
+print(f"Random forest accuracy (random split): {accuracy:.4f}")
 classes= class_test_prob_y.columns
 cm= confusion_matrix(y_test, class_test_y, labels=classes)
 
@@ -247,7 +241,7 @@ plt.title("Confusion matrix")
 plt.colorbar()
 tick_marks= np.arange(len(classes))
 plt.xticks(tick_marks, classes, rotation=45)
-plt.yticks(tick_marks.classes)
+plt.yticks(tick_marks, classes)
 
 thresh = cm.max()/2.0
 for i,  j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
@@ -268,11 +262,11 @@ plt.show()
 # --------------------------------------------------------------
 
 participant_df = df.drop(["set", "category"], axis=1)
-X_train= participant_df[participant_df["participant"] != "A".drop("label", axis =1)]
-Y_train= participant_df[participant_df["participant"] != "A"]["label"]
+X_train = participant_df[participant_df["participant"] != "A"].drop(["label", "participant"], axis=1)
+y_train = participant_df[participant_df["participant"] != "A"]["label"]
 
-X_test= participant_df[participant_df["participant"] == "A".drop("label", axis =1)]
-X_test= participant_df[participant_df["participant"] == "A"]["label"]
+X_test = participant_df[participant_df["participant"] == "A"].drop(["label", "participant"], axis=1)
+y_test = participant_df[participant_df["participant"] == "A"]["label"]
 
 fig,ax = plt.subplots(figsize=(10,5))
 df_train["label"].value_counts().plot(
@@ -298,6 +292,7 @@ plt.show()
 )
 
 accuracy = accuracy_score(y_test,class_test_y)
+print(f"Random forest accuracy (participant A held out): {accuracy:.4f}")
 
 classes= class_test_prob_y.columns
 cm= confusion_matrix(y_test, class_test_y, labels=classes)
@@ -308,7 +303,7 @@ plt.title("Confusion matrix")
 plt.colorbar()
 tick_marks= np.arange(len(classes))
 plt.xticks(tick_marks, classes, rotation=45)
-plt.yticks(tick_marks.classes)
+plt.yticks(tick_marks, classes)
 
 thresh = cm.max()/2.0
 for i,  j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):

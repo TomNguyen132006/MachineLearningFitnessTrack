@@ -4,14 +4,18 @@ import matplotlib.pyplot as plt
 from DataTransformation import LowPassFilter, PrincipalComponentAnalysis
 from TemporalAbstraction import NumericalAbstraction
 from FrequencyAbstraction import FourierTransformation
-from sklearn.cluster import KMeans      
+from sklearn.cluster import KMeans
+from pathlib import Path
+
+# Resolve data paths relative to the repo root so the script runs from any directory
+ROOT = Path(__file__).resolve().parents[2]
 
 
 # --------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------
 
-df= pd.read_pickle("../../data/interim/02_outlier_removed_chauvenets.pkl")
+df= pd.read_pickle(ROOT / "data/interim/02_outlier_removed_chauvenets.pkl")
 
 
 predictor_columns =list( df.columns[:6])
@@ -66,7 +70,7 @@ cutoff = 1.1
 df_lowpass= LowPass.low_pass_filter(df_lowpass, "acc_y", fs, cutoff, order = 5)
  
 subset = df_lowpass[df_lowpass["set"] == 45] 
-print(subset["label"][0])
+print(subset["label"].iloc[0])
  
 fig, ax= plt.subplots(nrows=2, sharex=True, figsize=(20, 10))
 ax[0].plot(subset["acc_y"].reset_index(drop=True), label="raw data")
@@ -129,7 +133,7 @@ subset[["acc_r" , "gyr_r"]].plot(subplots=True)
 df_temporal = df_squared.copy()
 NUmAbs= NumericalAbstraction()
 
-predictor_columns = predictor_columns + ["acc_r" , "gyr_y"]
+predictor_columns = predictor_columns + ["acc_r", "gyr_r"]
 
 ws = int(1000/200)
 
@@ -256,4 +260,4 @@ plt.show()
 # Export dataset
 # --------------------------------------------------------------
 
-df_cluster.to_pickle("../../data/interim/03_data_features.pkl")
+df_cluster.to_pickle(ROOT / "data/interim/03_data_features.pkl")
