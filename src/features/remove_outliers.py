@@ -4,12 +4,16 @@ import matplotlib.pyplot as plt
 import math
 import scipy
 from sklearn.neighbors import LocalOutlierFactor  # pip install scikit-learn
+from pathlib import Path
+
+# Resolve data paths relative to the repo root so the script runs from any directory
+ROOT = Path(__file__).resolve().parents[2]
 
 # --------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------
 
-df = pd.read_pickle("../../data/interim/01_data_processed.pkl")
+df = pd.read_pickle(ROOT / "data/interim/01_data_processed.pkl")
 outlier = list(df.columns[:6])
 
 # --------------------------------------------------------------
@@ -259,4 +263,4 @@ for col in outlier:
 # --------------------------------------------------------------
 
 
-removed_df.to_pickle("../../data/interim/02_outlier_removed_chauvenets.pkl") 
+removed_df.to_pickle(ROOT / "data/interim/02_outlier_removed_chauvenets.pkl") 

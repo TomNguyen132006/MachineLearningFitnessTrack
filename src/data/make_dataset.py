@@ -1,30 +1,36 @@
+import os
 import pandas as pd
 from glob import glob
+from pathlib import Path
+
+# Resolve data paths relative to the repo root so the script runs from any directory
+ROOT = Path(__file__).resolve().parents[2]
 
 # --------------------------------------------------------------
 # Read single CSV file
 # --------------------------------------------------------------
 
-single_line_acc = pd.read_csv("../../data/raw/MetaMotion/A-bench-heavy2-rpe8_MetaWear_2019-01-11T16.10.08.270_C42732BE255C_Accelerometer_12.500Hz_1.4.4.csv")
+single_line_acc = pd.read_csv(ROOT / "data/raw/MetaMotion/A-bench-heavy2-rpe8_MetaWear_2019-01-11T16.10.08.270_C42732BE255C_Accelerometer_12.500Hz_1.4.4.csv")
 
-single_line_gyr = pd.read_csv("../../data/raw/MetaMotion/A-bench-heavy2-rpe8_MetaWear_2019-01-11T16.10.08.270_C42732BE255C_Gyroscope_25.000Hz_1.4.4.csv")
+single_line_gyr = pd.read_csv(ROOT / "data/raw/MetaMotion/A-bench-heavy2-rpe8_MetaWear_2019-01-11T16.10.08.270_C42732BE255C_Gyroscope_25.000Hz_1.4.4.csv")
 # --------------------------------------------------------------
 # List all data in data/raw/MetaMotion
 # --------------------------------------------------------------
 
-files = glob("../../data/raw/MetaMotion/*.csv")
+files = sorted(glob(str(ROOT / "data/raw/MetaMotion/*.csv")))
 len(files)
 
 # --------------------------------------------------------------
 # Extract features from filename
 # --------------------------------------------------------------
 
-data_path = "../../data/raw/MetaMotion"
+data_path = str(ROOT / "data/raw/MetaMotion")
 f = files[1]
 
-par = f.split("-")[0].replace(data_path, "").replace("\\","")
-label = f.split("-")[1]
-cate = f.split("-")[2].rstrip("123")
+name = os.path.basename(f)
+par = name.split("-")[0]
+label = name.split("-")[1]
+cate = name.split("-")[2].split("_")[0].rstrip("123")
 
 df = pd.read_csv(f)
 
@@ -43,9 +49,10 @@ acc_set = 1
 gyr_set = 1
 
 for f in files:
-    par = f.split("-")[0].replace(data_path, "").replace("\\", "")
-    label = f.split("-")[1]
-    cate = f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
+    name = os.path.basename(f)
+    par = name.split("-")[0]
+    label = name.split("-")[1]
+    cate = name.split("-")[2].split("_")[0].rstrip("123")
     
     df = pd.read_csv(f)
     
@@ -98,7 +105,7 @@ del gyr_df["elapsed (s)"]
 
 
 
-files = glob("../../data/raw/MetaMotion/*.csv")
+files = sorted(glob(str(ROOT / "data/raw/MetaMotion/*.csv")))
 
 def read_data_from_files(files):  
     acc_df= pd.DataFrame()
@@ -108,9 +115,10 @@ def read_data_from_files(files):
     gyr_set = 1
 
     for f in files:
-        par = f.split("-")[0].replace(data_path, "").replace("\\", "")
-        label = f.split("-")[1]
-        cate = f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
+        name = os.path.basename(f)
+        par = name.split("-")[0]
+        label = name.split("-")[1]
+        cate = name.split("-")[2].split("_")[0].rstrip("123")
         
         df = pd.read_csv(f)
         
@@ -206,4 +214,5 @@ data_resampled.info()
 # --------------------------------------------------------------
 
 
-data_resampled.to_pickle("../../data/interim/01_data_processed.pkl")
+(ROOT / "data/interim").mkdir(parents=True, exist_ok=True)
+data_resampled.to_pickle(ROOT / "data/interim/01_data_processed.pkl")

@@ -2,12 +2,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from IPython.display import display
+from pathlib import Path
+
+# Resolve data paths relative to the repo root so the script runs from any directory
+ROOT = Path(__file__).resolve().parents[2]
 
 # --------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------
 
-df = pd.read_pickle("../../data/interim/01_data_processed.pkl")
+df = pd.read_pickle(ROOT / "data/interim/01_data_processed.pkl")
 # --------------------------------------------------------------
 # Plot single columns
 # --------------------------------------------------------------
@@ -154,6 +158,7 @@ for label in labels:
             ax[0]. legend(loc = "upper center", bbox_to_anchor=(0.5, 1.15), ncol= 3, fancybox= True, shadow = True)
             ax[1]. legend(loc = "upper center", bbox_to_anchor=(0.5, 1.15), ncol= 3, fancybox= True, shadow = True)
             ax[1].set_xlabel("samples")
-            plt.savefig(f"../../reports/figures/ {label.title()} ({participant}).png")
+            (ROOT / "reports/figures").mkdir(parents=True, exist_ok=True)
+            plt.savefig(ROOT / f"reports/figures/{label.title()} ({participant}).png")
             plt.show()
             
