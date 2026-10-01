@@ -2,6 +2,8 @@
 
 A machine learning pipeline that processes MetaMotion accelerometer and gyroscope data to classify barbell exercises from real workout sessions.
 
+> **Note:** This repo uses synthetic sample data; accuracy and rep-count results do not reflect real-world performance. The real MetaMotion recordings are not included, so `src/data/generate_synthetic_data.py` creates a stand-in dataset with the same file names and columns.
+
 ## Overview
 
 This project converts raw wearable sensor data into a clean, structured dataset for machine learning. The pipeline includes data preprocessing, time-series resampling, visualization, outlier detection, feature engineering, and exercise classification.
@@ -35,14 +37,21 @@ The goal of this project is to explore how motion sensor data can be used to rec
 MachineLearningFitnessTrack/
 ├── src/
 │   ├── data/
+│   │   ├── generate_synthetic_data.py   # creates the stand-in dataset
 │   │   └── make_dataset.py
 │   ├── features/
 │   │   ├── remove_outliers.py
-│   │   └── build_features.py
+│   │   ├── build_features.py
+│   │   └── count_repetitions.py
 │   ├── models/
 │   │   └── train_model.py
 │   └── visualization/
 │       └── visualize.py
+├── demo/
+│   ├── export_demo_data.py              # exports pipeline results for the demo page
+│   ├── demo_data.json
+│   └── index.html                       # single-file demo page
+├── requirements.txt
 └── README.md
 ```
 
@@ -111,20 +120,56 @@ Model performance is evaluated using accuracy scores and confusion matrices.
 
 ## How to Run
 
-Install the required Python packages:
+Tested with Python 3.12. All scripts resolve paths from the project root, so run them from the project root (or anywhere else) in this order.
+
+1. Create a virtual environment and install the pinned packages:
 
 ```bash
-pip install pandas numpy matplotlib seaborn scikit-learn scipy ipython
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate       # macOS / Linux
+pip install -r requirements.txt
 ```
 
-Run the pipeline step by step:
+2. Generate the synthetic data (320 CSV files in `data/raw/MetaMotion/`, identical on every run). To use the real MetaMotion recordings instead, put them in `data/raw/MetaMotion/` and skip this step.
 
 ```bash
-python src/data/make_dataset.py
-python src/features/remove_outliers.py
-python src/features/build_features.py
-python src/models/train_model.py
+python src/data/generate_synthetic_data.py
 ```
+
+3. Run the pipeline:
+
+```bash
+python src/data/make_dataset.py          # resample to 5 Hz -> data/interim/01_data_processed.pkl
+python src/features/remove_outliers.py   # Chauvenet outlier removal -> 02_outlier_removed_chauvenets.pkl
+python src/features/build_features.py    # filtering, PCA, temporal/frequency features, clusters -> 03_data_features.pkl
+python src/models/train_model.py         # trains and compares the classifiers (slow, see below)
+```
+
+4. Optional scripts:
+
+```bash
+python src/visualization/visualize.py      # saves sensor plots to reports/figures/
+python src/features/count_repetitions.py   # counts reps per set and prints the mean absolute error
+```
+
+The scripts open plot windows as they run. To run them without windows (for example on a server), set `MPLBACKEND=Agg` first.
+
+`train_model.py` runs forward feature selection and several grid searches, so it takes about 20 minutes.
+
+## Demo
+
+`demo/index.html` is a single-page demo of the results: a replay of a recorded bench press set with live rep counting, then the dataset, sensor signals, outlier detection, model comparison, confusion matrix and rep counting results.
+
+To open it, double-click `demo/index.html`. No server is needed, but the charts load Chart.js from a CDN, so an internet connection is required.
+
+To regenerate its data after running steps 1–3:
+
+```bash
+python demo/export_demo_data.py
+```
+
+This recomputes every number from the pickles in `data/interim/`, writes `demo/demo_data.json`, and embeds the same data in `demo/index.html`. It retrains the models, so it takes about as long as `train_model.py`. Results are repeatable: the script fixes the random seed and Python's hash seed.
 
 ## Key Results
 
@@ -135,11 +180,9 @@ python src/models/train_model.py
 
 ## Notes
 
-The raw sensor dataset is not included in this repository because it may contain large files and participant-specific workout data. This repository focuses on the project pipeline, source code, and machine learning workflow.
+The real MetaMotion dataset is not included in this repository because it may contain large files and participant-specific workout data. The included generator creates synthetic sample data with the same structure so the full pipeline can run; results on that data do not reflect real-world performance.
 
 ## Future Improvements
 
-- Add a `requirements.txt` file for easier setup
 - Add sample figures to the README, such as sensor visualizations and model performance charts
 - Refactor exploratory code into reusable functions
-- Add a repetition-counting module if the algorithm is included in the final project version
