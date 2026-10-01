@@ -5,7 +5,7 @@ __pycache__/
 
 # Virtual environments
 .env
-.venv
+.venv/
 venv/
 env/
 
@@ -22,18 +22,14 @@ Thumbs.db
 
 # Data files
 # Keep raw and processed datasets out of GitHub because they can be large or contain participant-specific data.
-data/raw/*
-data/interim/*
-data/processed/*
-!data/raw/.gitkeep
-!data/interim/.gitkeep
-!data/processed/.gitkeep
+# Recreate the synthetic data with: python src/data/generate_synthetic_data.py
+/data/
 
 # Generated reports and figures
 reports/figures/*
 !reports/figures/.gitkeep
 
 # Model artifacts
-models/
+/models/
 *.pkl
 *.joblib
