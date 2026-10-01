@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 from DataTransformation import LowPassFilter
 from scipy.signal import argrelextrema
 from sklearn.metrics import mean_absolute_error
+from pathlib import Path
+
+# Resolve data paths relative to the repo root so the script runs from any directory
+ROOT = Path(__file__).resolve().parents[2]
 
 pd.options.mode.chained_assignment = None
 
@@ -19,7 +23,7 @@ plt.rcParams["lines.linewidth"] = 2
 # Load data
 # --------------------------------------------------------------
 
-df = pd.read_pickle("../../data/interim/01_data_processed.pkl")
+df = pd.read_pickle(ROOT / "data/interim/01_data_processed.pkl")
 df = df[df["label"] != "rest"]
 
 acc_r = df["acc_x"] ** 2 + df["acc_y"] ** 2 + df["acc_z"] ** 2
@@ -92,20 +96,21 @@ LowPass.low_pass_filter(
 
 def count_reps(dataset, cutoff=0.4, order=10, column="acc_r"):
     data = LowPass.low_pass_filter(
-        dataset,col+column, sampling_frequency=fs, cutoff_frequency=cutoff, order=order
+        dataset, col=column, sampling_frequency=fs, cutoff_frequency=cutoff, order=order
     )
     indexes = argrelextrema(data[column + "_lowpass"].values, np.greater)
     peaks = data.iloc[indexes]
 
     fig, ax = plt.subplots()
-    plt.plot(dataset[f"{column}_lowpass"])
+    plt.plot(data[f"{column}_lowpass"])
     plt.plot(peaks[f"{column}_lowpass"], "o", color="red")
     ax.set_ylabel(f"{column}_lowpass")
-    excercise= dataset["label"].iloc[0].title()
+    exercise = dataset["label"].iloc[0].title()
     category = dataset["category"].iloc[0].title()
     plt.title(f"{category} {exercise}: {len(peaks)} Reps")
     plt.show()
-    
+    plt.close(fig)
+
     return len(peaks)
 
 count_reps(bench_set, cutoff = 0.4)
@@ -118,9 +123,9 @@ count_reps(dead_set, cutoff = 0.4)
 # Create benchmark dataframe
 # --------------------------------------------------------------
 
-df["reps"] = df["category"].apply(lambda x: 5 if x == " heavy" else 10)
+df["reps"] = df["category"].apply(lambda x: 5 if x == "heavy" else 10)
 rep_df = df.groupby(["label" , "category", "set"])["reps"].max().reset_index()
-rep_df["pres_pred"] = 0
+rep_df["reps_pred"] = 0
 
 for s in df["set"].unique():
     subset = df[df["set"] == s]
@@ -133,7 +138,7 @@ for s in df["set"].unique():
 
     if subset["label"].iloc[0] =="row":
         cutoff = 0.65
-        col = "gyr_x"
+        column = "gyr_x"
     
     if subset["label"].iloc[0] =="ohp":
         cutoff = 0.35
@@ -152,5 +157,6 @@ rep_df
 # --------------------------------------------------------------
 
 
-error = mean_absolute_error(rep_df["reps"], rep_df["reps_pred"]).round(2)
-rep_df.groupby(["label", "category"])["reps", "reps_pred"].mean().plot.bar()
+error = round(mean_absolute_error(rep_df["reps"], rep_df["reps_pred"]), 2)
+print(f"Mean absolute error (reps): {error}")
+rep_df.groupby(["label", "category"])[["reps", "reps_pred"]].mean().plot.bar()
