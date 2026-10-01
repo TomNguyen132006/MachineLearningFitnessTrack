@@ -1,7 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from IPython.display import display
 from pathlib import Path
 
 # Resolve data paths relative to the repo root so the script runs from any directory
