@@ -48,7 +48,8 @@ MachineLearningFitnessTrack/
 │   │   ├── build_features.py
 │   │   └── count_repetitions.py
 │   ├── models/
-│   │   └── train_model.py
+│   │   ├── train_model.py
+│   │   └── evaluate_lopo.py             # leave-one-participant-out accuracy
 │   └── visualization/
 │       └── visualize.py
 ├── demo/
@@ -161,7 +162,10 @@ python src/models/train_model.py         # trains and compares the classifiers (
 ```bash
 python src/visualization/visualize.py      # saves sensor plots to reports/figures/
 python src/features/count_repetitions.py   # counts reps per set and prints the mean absolute error
+python src/models/evaluate_lopo.py         # leave-one-participant-out accuracy (takes a few minutes)
 ```
+
+`evaluate_lopo.py` trains the random forest on Feature_set_4 five times, each time holding out one participant as the test set, and prints each accuracy and the mean. It tests how well the classifier works on a person it has never seen. On the real data the mean is 94.85% (participants A–E: 99.3%, 87.4%, 87.8%, 100%, 99.7%); the original paper reports 85.43% with its own features and model. Results repeat exactly because the script fixes the random seed and Python's hash seed.
 
 The scripts open plot windows as they run. To run them without windows (for example on a server), set `MPLBACKEND=Agg` first.
 
