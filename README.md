@@ -2,7 +2,11 @@
 
 A machine learning pipeline that processes MetaMotion accelerometer and gyroscope data to classify barbell exercises from real workout sessions.
 
-> **Note:** This repo uses synthetic sample data; accuracy and rep-count results do not reflect real-world performance. The real MetaMotion recordings are not included, so `src/data/generate_synthetic_data.py` creates a stand-in dataset with the same file names and columns.
+> **Data and credit:** The MetaMotion recordings, the original approach, and the exercise illustration below come from **Dave Ebbelaar**: his [*Full Machine Learning Project: Coding a Fitness Tracker with Python*](https://www.youtube.com/playlist?list=PL-Y17yukoyy0sT2hoSQxn1TdV0J7-MX4K) tutorial and his repo [daveebbelaar/tracking-barbell-exercises](https://github.com/daveebbelaar/tracking-barbell-exercises). The data is not included here; download it from his repo (see [How to Run](#how-to-run)).
+
+![Barbell exercises: bench press, deadlift, overhead press, barbell row, squat](https://raw.githubusercontent.com/daveebbelaar/tracking-barbell-exercises/master/PythonCode/images/barbell_exercises.png)
+
+*Exercise illustration from [Dave Ebbelaar's repo](https://github.com/daveebbelaar/tracking-barbell-exercises/blob/master/PythonCode/images/barbell_exercises.png).*
 
 ## Overview
 
@@ -131,11 +135,17 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-2. Generate the synthetic data (320 CSV files in `data/raw/MetaMotion/`, identical on every run). To use the real MetaMotion recordings instead, put them in `data/raw/MetaMotion/` and skip this step.
+2. Download the MetaMotion data from Dave Ebbelaar's repo and copy the 187 CSV files in `PythonCode/data/` (not the `form/` subfolder) into `data/raw/MetaMotion/`:
 
 ```bash
-python src/data/generate_synthetic_data.py
+git clone -c core.longpaths=true https://github.com/daveebbelaar/tracking-barbell-exercises
+mkdir -p data/raw/MetaMotion
+cp tracking-barbell-exercises/PythonCode/data/*.csv data/raw/MetaMotion/
 ```
+
+`core.longpaths=true` is needed on Windows because some file names are long. `data/` is in `.gitignore`, so the files stay out of this repo.
+
+Without the real data, `python src/data/generate_synthetic_data.py` creates a synthetic stand-in with the same file names and columns. Results on it do not reflect real-world performance. If you use it, set `"data_source"` to `"synthetic"` in `demo/export_demo_data.py` so the demo page shows a warning.
 
 3. Run the pipeline:
 
@@ -180,7 +190,13 @@ This recomputes every number from the pickles in `data/interim/`, writes `demo/d
 
 ## Notes
 
-The real MetaMotion dataset is not included in this repository because it may contain large files and participant-specific workout data. The included generator creates synthetic sample data with the same structure so the full pipeline can run; results on that data do not reflect real-world performance.
+The MetaMotion dataset is not included in this repository. Download it from [Dave Ebbelaar's repo](https://github.com/daveebbelaar/tracking-barbell-exercises) as described in [How to Run](#how-to-run).
+
+## Credits
+
+- **Data:** the MetaMotion accelerometer and gyroscope recordings (5 participants, barbell exercises) were collected by Dave Ebbelaar and are published in [daveebbelaar/tracking-barbell-exercises](https://github.com/daveebbelaar/tracking-barbell-exercises).
+- **Original approach:** the pipeline (5 Hz resampling, Chauvenet outlier removal, low-pass filtering, PCA, temporal and frequency features, clustering, model comparison, peak-based rep counting) follows Dave Ebbelaar's [*Full Machine Learning Project: Coding a Fitness Tracker with Python*](https://www.youtube.com/playlist?list=PL-Y17yukoyy0sT2hoSQxn1TdV0J7-MX4K) tutorial and his paper *Exploring the Possibilities of Context Aware Applications for Strength Training*, included in his repo.
+- **Exercise illustration:** [`barbell_exercises.png`](https://github.com/daveebbelaar/tracking-barbell-exercises/blob/master/PythonCode/images/barbell_exercises.png) from his repo. The animated bench-press figure on the demo page was drawn for this project.
 
 ## Future Improvements
 

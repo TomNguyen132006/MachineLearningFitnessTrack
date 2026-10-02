@@ -22,7 +22,7 @@ Thumbs.db
 
 # Data files
 # Keep raw and processed datasets out of GitHub because they can be large or contain participant-specific data.
-# Recreate the synthetic data with: python src/data/generate_synthetic_data.py
+# Download the MetaMotion CSVs from https://github.com/daveebbelaar/tracking-barbell-exercises (see README)
 /data/
 
 # Generated reports and figures
