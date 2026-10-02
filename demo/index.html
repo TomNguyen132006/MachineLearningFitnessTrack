@@ -91,7 +91,14 @@
   th { color: var(--text-2); font-weight: 600; }
   tr.best td { background: var(--accent-soft); font-weight: 600; }
   details { margin-top: 14px; }
-  summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+  summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; padding: 10px 0; line-height: 24px; }
+  /* Tables wider than their box: hint + first column stays put while swiping */
+  .swipe-hint { color: var(--muted); font-size: 0.875rem; margin: 4px 0 6px; text-align: right; }
+  .table-wrap.scrolls th:first-child, .table-wrap.scrolls td:first-child {
+    position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: inset -1px 0 0 var(--border);
+  }
+  .table-wrap.scrolls tr.best td:first-child { background: var(--accent-soft); }
+  .phone-only { display: none; }
 
   /* Confusion matrix */
   table.cm { width: auto; margin: 0 auto; }
@@ -152,6 +159,8 @@
   /* Phones: shorter charts, no text under 14px */
   @media (max-width: 600px) {
     .chart-box, .chart-box.short { height: 260px; }
+    .chart-box.tall { height: 420px; }
+    .phone-only { display: block; }
     .action-chart { height: 220px; }
     .badge, .replay-tag, .step .k, .step .d, .card .l, .card .s, .meta, .axis-label, table, summary, pre,
     .result .small, .credit-line, .credit-fig figcaption, ul.credits { font-size: 0.875rem; }
@@ -250,7 +259,7 @@
     <p class="sub">Test-set accuracy for each model and feature set, computed as in <code>train_model.py</code> (75/25 stratified split).</p>
     <div class="cards" id="model-cards"></div>
     <p class="chart-title">Accuracy by model and feature set</p>
-    <div class="chart-box"><canvas id="chart-models"></canvas></div>
+    <div class="chart-box tall"><canvas id="chart-models"></canvas></div>
     <details open><summary>Show as table (best results highlighted)</summary><div class="table-wrap" id="model-table"></div></details>
   </section>
 
@@ -266,7 +275,7 @@
     <p class="sub" id="reps-sub"></p>
     <div class="cards" id="rep-cards"></div>
     <p class="chart-title">Average reps per set: actual vs. predicted</p>
-    <div class="chart-box"><canvas id="chart-reps"></canvas></div>
+    <div class="chart-box tall"><canvas id="chart-reps"></canvas></div>
     <details><summary>Show as table</summary><div class="table-wrap" id="rep-table"></div></details>
   </section>
 
@@ -335,6 +344,7 @@ python demo/export_demo_data.py</pre>
       .map((r, i) => `<tr${i < (bestCount || 0) ? ' class="best"' : ""}>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`)
       .join("")}</tbody></table>`;
 
+  const phone = window.matchMedia("(max-width: 600px)");
   if (typeof Chart !== "undefined") {
     Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
     Chart.defaults.color = v("--text-2");
@@ -345,7 +355,6 @@ python demo/export_demo_data.py</pre>
     Chart.defaults.interaction.mode = "index";
     Chart.defaults.interaction.intersect = false;
     // Phones: 14px chart text and fewer time labels so they don't crowd
-    const phone = window.matchMedia("(max-width: 600px)");
     const applyPhone = () => {
       Chart.defaults.font.size = phone.matches ? 14 : 12;
       Object.values(Chart.instances).forEach((ch) => ch.update("none"));
@@ -361,6 +370,27 @@ python demo/export_demo_data.py</pre>
     });
   }
   const makeChart = (id, config) => (typeof Chart !== "undefined" ? new Chart(document.getElementById(id), config) : null);
+  // A chart with a separate phone layout: build(isPhone) returns the config, rebuilt when the screen crosses 600px
+  const phoneAwareChart = (id, build) => {
+    let chart = makeChart(id, build(phone.matches));
+    phone.addEventListener("change", () => { if (chart) { chart.destroy(); chart = makeChart(id, build(phone.matches)); } });
+  };
+  const compactLegend = { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, padding: 8 } };
+  // Show the swipe hint and sticky first column only while a table is wider than its box
+  const watchTableScroll = (wrap) => {
+    const hint = document.createElement("p");
+    hint.className = "swipe-hint";
+    hint.textContent = "Swipe to see more →";
+    hint.hidden = true;
+    wrap.before(hint);
+    const check = () => {
+      const scrolls = wrap.scrollWidth > wrap.clientWidth + 1;
+      wrap.classList.toggle("scrolls", scrolls);
+      hint.hidden = !scrolls;
+    };
+    if (window.ResizeObserver) new ResizeObserver(check).observe(wrap);
+    check();
+  };
   const barStyle = { borderRadius: 4, borderSkipped: "start", maxBarThickness: 36 };
 
   // ---------- See it in action: replay of one recorded set
@@ -645,7 +675,30 @@ python demo/export_demo_data.py</pre>
       card(pct(md.participant_holdout.accuracy), "Unseen participant", `${md.participant_holdout.model} on ${md.participant_holdout.feature_set}, participant ${md.participant_holdout.held_out} held out`) +
       card(fmt(md.train_rows), "Training rows") +
       card(fmt(md.test_rows), "Test rows");
-    makeChart("chart-models", {
+    // Phones: one horizontal bar per model (its best feature set, named in the label); the table below has every result
+    const bestPerModel = models.map((mo) => md.scores.filter((x) => x.model === mo).sort((a, c) => c.accuracy - a.accuracy)[0]);
+    phoneAwareChart("chart-models", (isPhone) => isPhone ? {
+      type: "bar",
+      data: {
+        labels: bestPerModel.map((x) => [MODEL_NAMES[x.model] || x.model, x.feature_set]),
+        datasets: [{
+          label: "Best feature set per model",
+          data: bestPerModel.map((x) => x.accuracy),
+          backgroundColor: SERIES[0],
+          borderColor: bestPerModel.map((x) => (isBest(x.model, x.feature_set) ? v("--text") : "transparent")),
+          borderWidth: bestPerModel.map((x) => (isBest(x.model, x.feature_set) ? 2 : 0)),
+          ...barStyle,
+        }],
+      },
+      options: {
+        indexAxis: "y",
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { title: (it) => MODEL_NAMES[bestPerModel[it[0].dataIndex].model] || bestPerModel[it[0].dataIndex].model, label: (c) => `${bestPerModel[c.dataIndex].feature_set}: ${pct(c.raw)}${isBest(models[c.dataIndex], bestPerModel[c.dataIndex].feature_set) ? "  (best)" : ""}` } },
+        },
+        scales: { x: { beginAtZero: true, max: 1, ticks: { callback: (x) => Math.round(x * 100) + "%" }, title: { display: true, text: "Best test accuracy" } }, y: { grid: { display: false } } },
+      },
+    } : {
       type: "bar",
       data: {
         labels: models.map((x) => MODEL_NAMES[x] || x),
@@ -663,6 +716,8 @@ python demo/export_demo_data.py</pre>
         scales: { y: { beginAtZero: true, max: 1, ticks: { callback: (x) => Math.round(x * 100) + "%" }, title: { display: true, text: "Test accuracy" } }, x: { grid: { display: false } } },
       },
     });
+    document.getElementById("chart-models").closest(".chart-box").insertAdjacentHTML("afterend",
+      `<p class="meta phone-only">On phones the chart shows each model's best feature set. The table below lists every combination.</p>`);
     const ranked = md.scores.slice().sort((a, c) => c.accuracy - a.accuracy);
     document.getElementById("model-table").innerHTML = table(
       ["Model", "Feature set", "Features", "Accuracy"],
@@ -698,22 +753,30 @@ python demo/export_demo_data.py</pre>
       card(`${r.exact_match_sets} / ${r.sets.length}`, "Sets counted exactly") +
       card(r.sets.length, "Sets evaluated");
     const g = r.by_label_category;
-    makeChart("chart-reps", {
+    const SHORT_NAMES = { bench: "Bench", squat: "Squat", row: "Row", ohp: "OHP", dead: "Deadlift" };
+    // Phones: horizontal bars with short labels ("OHP (H)") so the labels don't need to be slanted
+    phoneAwareChart("chart-reps", (isPhone) => ({
       type: "bar",
       data: {
-        labels: g.map((x) => `${nice(x.label)} (${x.category})`),
+        labels: g.map((x) => (isPhone ? `${SHORT_NAMES[x.label] || nice(x.label)} (${x.category[0].toUpperCase()})` : `${nice(x.label)} (${x.category})`)),
         datasets: [
           { label: "Actual reps", data: g.map((x) => x.reps), backgroundColor: SERIES[0], ...barStyle },
           { label: "Predicted reps", data: g.map((x) => x.reps_pred), backgroundColor: SERIES[1], ...barStyle },
         ],
       },
-      options: { plugins: { legend: { position: "top" } }, scales: { y: { beginAtZero: true, title: { display: true, text: "Reps per set (mean)" } }, x: { grid: { display: false } } } },
-    });
+      options: isPhone ? {
+        indexAxis: "y",
+        plugins: { legend: compactLegend, tooltip: { callbacks: { title: (it) => `${nice(g[it[0].dataIndex].label)} (${g[it[0].dataIndex].category})` } } },
+        scales: { x: { beginAtZero: true, title: { display: true, text: "Reps per set (mean)" } }, y: { grid: { display: false } } },
+      } : { plugins: { legend: { position: "top" } }, scales: { y: { beginAtZero: true, title: { display: true, text: "Reps per set (mean)" } }, x: { grid: { display: false } } } },
+    }));
     document.getElementById("rep-table").innerHTML = table(
       ["Exercise", "Category", "Actual (mean)", "Predicted (mean)"],
       g.map((x) => [nice(x.label), x.category, x.reps, x.reps_pred])
     );
   }
+
+  document.querySelectorAll(".table-wrap").forEach(watchTableScroll);
 })();
 </script>
 </body>
