@@ -376,8 +376,11 @@ if __name__ == "__main__":
             "project": "Machine Learning Fitness Tracker",
             "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "seed": SEED,
-            "synthetic_data": True,
-            "data_note": "Results are computed from synthetic sample data, not real MetaMotion recordings.",
+            # "real" = MetaMotion recordings from github.com/daveebbelaar/tracking-barbell-exercises;
+            # set to "synthetic" when data/raw/MetaMotion/ was made by generate_synthetic_data.py
+            "data_source": "real",
+            "data_note": "Results are computed from the real MetaMotion recordings collected by Dave Ebbelaar "
+            "(github.com/daveebbelaar/tracking-barbell-exercises).",
         }
     }
 
